@@ -9,11 +9,12 @@ import './App.css';
 class App extends Component {
   
   state = {
-    currentUser:{}
+    currentUser: {},
+    playlists: {}
   }
 
-  renderProfile = () =>{
-    return <Profile currentUser = {this.state.currentUser}/>
+  renderProfile = () => {
+    return <Profile currentUser = {this.state.currentUser} handleClick={this.handleClick}/>
   } 
 
   handleCode = (code) =>{
@@ -28,11 +29,14 @@ class App extends Component {
     return <Callback location={location} handleCode={this.handleCode} />
   }
 
+  handleClick = () => {
+    console.log("HIIII")
+  }
+
   render() {
-    
     return (
       <div className="App">
-        <h1>SPOTIFY API TUTORIAL</h1>
+        <h1>SPOTIFY API</h1>
         <br/>
         <Login currentUser={this.state.currentUser}/>
         <Route exact path="/callback" component={this.handleCallback} />
