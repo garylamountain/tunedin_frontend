@@ -27,47 +27,77 @@ class App extends Component {
       })
   }
 
+  setDefaultSelectedPlaylist = () => {
+    fetch('http://localhost:3000/playlists/1699')
+    .then(res => res.json())
+    .then(data => {
+      let nowSelected = {};
+      nowSelected["name"] = data.name;
+      nowSelected["url"] = data.url;
+      let nowPlaying = nowSelected
+      this.setState({nowSelected,nowPlaying, queriedPlaylists: data.relatedPlaylists})
+    })
+  }
+
+  renderRelatedPlaylists = () => {
+    for(let i = 0; i < this.state.queriedPlaylists.length; i++){
+      <p>{this.state.queriedPlaylists[i]}</p>
+    }
+  }
+
   componentDidMount(){
-      fetch('http://localhost:3000/playlists')
-      .then(res => res.json())
-      .then(data => {
-        let nowSelected = {};
-        let pop = data.filter(genre => genre.name === 'pop');
-        nowSelected["name"] = pop[0].name;
-        nowSelected["url"] = pop[0].url;
-        let nowPlaying = nowSelected
-        this.setState({nowSelected,nowPlaying})
-      })
+    this.setDefaultSelectedPlaylist()
   }
 
   handleCallback = ({location}) =>{
     return <Callback location={location} handleCode={this.handleCode} />
   }
 
-  // handleClick = () => {
-  //   console.log("HIIII")
-  // }
+  renderRelatedPlaylists = genre => {
+    if(this.state.queriedPlaylists.indexOf(genre) % 2 === 0){
+      return <p key={genre} onClick={event => this.setNowSelected(event)}>{genre}</p>
+    }
+  }
+
+  handleiFrameLoaded = event => {
+    console.log(event.target)
+    var myConfObj = {
+      iframeMouseOver : false
+    }
+    window.addEventListener('blur',function(){
+      if(myConfObj.iframeMouseOver){
+        console.log('Wow! Iframe Click!');
+      }
+    });
+    event.target.addEventListener('mouseover',function(){
+       myConfObj.iframeMouseOver = true;
+    });
+    event.target.addEventListener('mouseout',function(){
+        myConfObj.iframeMouseOver = false;
+    });
+  }
+
+  setNowSelected = event => {
+    let selectedGenre = event.target.innerHTML;
+    console.log(selectedGenre)
+    selectedGenre = selectedGenre.replace('r&amp;b','r&b')
+    // selectedGenre.replace('&','%26')
+    console.log(selectedGenre)
+    fetch('http://localhost:3000/playlists')
+    .then(res => res.json())
+    .then(data => {
+      let nowSelected = {};
+      let selected = data.filter(genre => genre.name === selectedGenre);
+      selected = selected[0]
+      console.log(selected)
+      nowSelected["name"] = selected.name;
+      nowSelected["url"] = selected.url;
+      let nowPlaying = nowSelected
+      this.setState({nowSelected,nowPlaying, queriedPlaylists: selected.relatedPlaylists})
+    })
+  }
 
   render() {
-    // const rp = require('request-promise');
-    // const $ = require('cheerio');
-    // const url = 'http://everynoise.com/everynoise1d.cgi?root=pop&scope=all';
-    // rp(url)
-    // .then(function(html){
-    //   //success!
-    //   console.log($('big > a', html).length);
-    // })
-    // .catch(function(err){
-    //   //handle error
-    // });
-    fetch("http://everynoise.com/everynoise1d.cgi?root=pop&scope=all",{
-      mode: 'no-cors'
-      // headers: {
-      //   'Access-Control-Allow-Origin':'*'
-      // }
-    })
-    .then(res => console.log(res))
-    // .then(data => console.log(data))
     console.log(this.state)
     return (
       <div className="App">
@@ -75,15 +105,19 @@ class App extends Component {
         <br/>
         {this.state.currentUser.display_name ? 
         <div>
-          {this.state.nowSelected.name ? <h6>Now Select: {this.state.nowSelected.name}</h6> : null}
-          {this.state.nowPlaying.name ? <h6>Now Playing: {this.state.nowPlaying.name}</h6> : null}
+          {this.state.nowPlaying.name ? <h3>Now Playing: {this.state.nowPlaying.name}</h3> : null}
+          {this.state.nowSelected.name ? <h6>Now Selected: {this.state.nowSelected.name}</h6> : null}
           <Profile currentUser = {this.state.currentUser} handleClick={this.handleClick}/>
           {this.state.nowPlaying.name ?
-          <iframe src={'https://open.spotify.com/embed/' + this.state.nowPlaying.url.replace("spotify:","").replace(":","/")} width="300" height="80" frameBorder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+          <iframe onLoad={this.handleiFrameLoaded} src={'https://open.spotify.com/embed/' + this.state.nowPlaying.url.replace("spotify:","").replace(":","/")} width="300" height="80" frameBorder="0" allowtransparency="true" allow="encrypted-media"></iframe>
           : 
           null}
+          {this.state.queriedPlaylists && this.state.queriedPlaylists != [] ?
+            this.state.queriedPlaylists.map(item => this.renderRelatedPlaylists(item))
+          :
+          null
+          }
         </div>
-        
         : 
         <div>
           <p>Not Logged In</p>
