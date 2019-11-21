@@ -12,7 +12,9 @@ class App extends Component {
     currentUser: {},
     nowSelected: {},
     nowPlaying: {},
-    queriedPlaylists: []
+    queriedPlaylists: [],
+    saved: false,
+    index: 0
   }
 
   // renderProfile = () => {
@@ -34,12 +36,15 @@ class App extends Component {
       let nowSelected = {};
       nowSelected["name"] = data.name;
       nowSelected["url"] = data.url;
-      let nowPlaying = nowSelected
-      this.setState({nowSelected,nowPlaying, queriedPlaylists: data.relatedPlaylists})
+      let nowPlaying = nowSelected;
+      let queriedPlaylists = data.relatedPlaylists;
+      queriedPlaylists.unshift(nowSelected.name, nowSelected.url)
+      this.setState({nowSelected, nowPlaying, queriedPlaylists})
     })
   }
 
   renderRelatedPlaylists = () => {
+    console.log(this.state.queriedPlaylists)
     for(let i = 0; i < this.state.queriedPlaylists.length; i++){
       <p>{this.state.queriedPlaylists[i]}</p>
     }
@@ -55,7 +60,7 @@ class App extends Component {
 
   renderRelatedPlaylists = genre => {
     if(this.state.queriedPlaylists.indexOf(genre) % 2 === 0){
-      return <p key={genre} onClick={event => this.setNowSelected(event)}>{genre}</p>
+      return <p key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</p>
     }
   }
 
@@ -70,8 +75,70 @@ class App extends Component {
     });
   }
 
-  setNowSelected = event => {
-    let selectedGenre = event.target.innerHTML;
+  handleChannelUp = () => {
+    let btns = document.querySelectorAll('button');
+    btns.forEach(btn => {
+      btn.disabled = 'true'
+    })
+    if(this.state.index == this.state.queriedPlaylists.length - 2){
+      let selectedGenre = this.state.queriedPlaylists[0];
+      this.setNowPlaying(selectedGenre);
+      this.setState({index: 0})
+    } else {
+      let selectedGenre = this.state.queriedPlaylists[this.state.index + 2];
+      this.setNowPlaying(selectedGenre);
+      this.setState({index: this.state.index + 2})
+    }
+  }
+
+  handleChannelDown = () => {
+    let btns = document.querySelectorAll('button');
+    btns.forEach(btn => {
+      btn.disabled = 'true'
+    })
+    if(this.state.index == 0){
+      let selectedGenre = this.state.queriedPlaylists[this.state.queriedPlaylists.length - 2];
+      this.setNowPlaying(selectedGenre);
+      this.setState({index: this.state.queriedPlaylists.length - 2})
+    } else {
+      let selectedGenre = this.state.queriedPlaylists[this.state.index - 2];
+      this.setNowPlaying(selectedGenre);
+      this.setState({index: this.state.index - 2})
+    }
+  }
+
+  handleSave = () => {
+    console.log(!this.state.saved)
+    this.setState({saved: !this.state.saved})
+  }
+
+  handleUnsave = () => {
+    console.log(!this.state.saved)
+    this.setState({saved: !this.state.saved})
+  }
+
+  setNowPlaying = selectedGenre => {
+    selectedGenre = selectedGenre.replace('r&amp;b','r&b')
+    fetch('http://localhost:3000/playlists')
+    .then(res => res.json())
+    .then(data => {
+      console.log("data", data)
+      let nowPlaying = {};
+      console.log("selected genre", selectedGenre)
+      let playing = data.filter(genre => genre.name === selectedGenre);
+      console.log("playing", playing)
+      playing = playing[0];
+      nowPlaying["name"] = playing.name;
+      nowPlaying["url"] = playing.url;
+      this.setState({nowPlaying})
+      let btns = document.querySelectorAll('button');
+      btns.forEach(btn => {
+        btn.removeAttribute('disabled')
+      })
+    })
+  }
+
+  setNowSelected = selectedGenre => {
     selectedGenre = selectedGenre.replace('r&amp;b','r&b')
     fetch('http://localhost:3000/playlists')
     .then(res => res.json())
@@ -83,9 +150,12 @@ class App extends Component {
       nowSelected["url"] = selected.url;
       let nowPlaying = nowSelected;
       let queriedPlaylists = selected.relatedPlaylists;
-      this.setState({nowSelected, nowPlaying, queriedPlaylists})
+      queriedPlaylists.unshift(nowSelected.name, nowSelected.url)
+      this.setState({nowSelected, nowPlaying, queriedPlaylists, index: 0})
     })
   }
+
+
 
   render() {
     console.log(this.state)
@@ -97,13 +167,27 @@ class App extends Component {
         <div>
           {this.state.nowPlaying.name ? <h3>Now Playing: {this.state.nowPlaying.name}</h3> : null}
           {this.state.nowSelected.name ? <h6>Now Selected: {this.state.nowSelected.name}</h6> : null}
+          {this.state.index}
           <Profile currentUser = {this.state.currentUser} handleClick={this.handleClick}/>
+          <br/>
           {this.state.nowPlaying.name ?
           <iframe onLoad={this.handleiFrameLoaded} src={'https://open.spotify.com/embed/' + this.state.nowPlaying.url.replace("spotify:","").replace(":","/")} width="300" height="80" frameBorder="0" allowtransparency="true" allow="encrypted-media"></iframe>
           : 
           null}
+          <div class="row justify-content-center">
+          <div class="btn-group col-12 col-md-4" role="group" aria-label="Basic example">
+            <button onClick={this.handleChannelDown} type="button" class="btn btn-secondary">▼</button>
+            {this.state.saved ? 
+            <button onClick={this.handleSave} type="button" class="btn btn-secondary">❤️</button>
+            :
+            <button onClick={this.handleUnsave} type="button" class="btn btn-secondary">🖤</button>
+            }
+            
+            <button onClick={this.handleChannelUp} type="button" class="btn btn-secondary">▲</button>
+          </div>
+          </div>
           {this.state.queriedPlaylists && this.state.queriedPlaylists != [] ?
-            this.state.queriedPlaylists.map(item => this.renderRelatedPlaylists(item))
+            this.state.queriedPlaylists.slice(2,this.state.queriedPlaylists.length - 1).map(item => this.renderRelatedPlaylists(item))
           :
           null
           }
