@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Callback from "./Callback"
 import Login from "./Login"
+import Navbar from './Navbar'
 import Auth from "../Adapters/Auth"
 import {Route, withRouter} from "react-router-dom"
 import './App.css';
@@ -48,16 +49,16 @@ class App extends Component {
     })
   }
 
-  renderRelatedPlaylists = () => {
-    console.log(this.state.queriedPlaylists)
-    for(let i = 0; i < this.state.queriedPlaylists.length; i++){
-      <p>{this.state.queriedPlaylists[i]}</p>
-    }
-  }
+  // renderRelatedPlaylists = () => {
+  //   console.log("ANONYMOUS")
+  //   for(let i = 0; i < this.state.queriedPlaylists.length; i++){
+  //     <p>{this.state.queriedPlaylists[i]}</p>
+  //   }
+  // }
 
-  componentDidMount(){
-    // this.props.changePreviewUrl()
-  }
+  // componentDidMount(){
+  //   this.props.changePreviewUrl()
+  // }
 
   handleCallback = ({location}) =>{
     return <Callback location={location} handleCode={this.handleCode} />
@@ -142,6 +143,10 @@ class App extends Component {
   }
 
   setNowSelected = selectedGenre => {
+    let btns = document.querySelectorAll('button');
+    btns.forEach(btn => {
+      btn.disabled = 'true'
+    })
     selectedGenre = selectedGenre.replace('r&amp;b','r&b')
     fetch('http://localhost:3000/playlists')
     .then(res => res.json())
@@ -154,8 +159,12 @@ class App extends Component {
       let nowPlaying = nowSelected;
       let queriedPlaylists = selected.relatedPlaylists;
       queriedPlaylists.unshift(nowSelected.name, nowSelected.url)
-      this.setState({nowSelected, nowPlaying, queriedPlaylists, index: 0})
-      this.props.changePreviewUrl(selected.preview_url)
+      this.setState({nowSelected, nowPlaying, queriedPlaylists, index: 0});
+      this.props.changePreviewUrl(selected.preview_url);
+      let btns = document.querySelectorAll('button');
+      btns.forEach(btn => {
+        btn.removeAttribute('disabled')
+      })
     })
   }
 
@@ -168,6 +177,7 @@ class App extends Component {
     console.log(this.state)
     return (
       <div className="App">
+        <Navbar currentUser={this.state.currentUser}/>
         <h1>SPOTIFY API</h1>
         <br/>
         {this.state.currentUser.display_name ? 
