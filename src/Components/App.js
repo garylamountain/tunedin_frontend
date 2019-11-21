@@ -61,39 +61,29 @@ class App extends Component {
 
   handleiFrameLoaded = event => {
     console.log(event.target)
-    var myConfObj = {
-      iframeMouseOver : false
+    window.focus();
+    window.addEventListener('click', function(e){
+    if(document.activeElement == document.querySelector('iframe'))
+    {
+        alert(1);
     }
-    window.addEventListener('blur',function(){
-      if(myConfObj.iframeMouseOver){
-        console.log('Wow! Iframe Click!');
-      }
-    });
-    event.target.addEventListener('mouseover',function(){
-       myConfObj.iframeMouseOver = true;
-    });
-    event.target.addEventListener('mouseout',function(){
-        myConfObj.iframeMouseOver = false;
     });
   }
 
   setNowSelected = event => {
     let selectedGenre = event.target.innerHTML;
-    console.log(selectedGenre)
     selectedGenre = selectedGenre.replace('r&amp;b','r&b')
-    // selectedGenre.replace('&','%26')
-    console.log(selectedGenre)
     fetch('http://localhost:3000/playlists')
     .then(res => res.json())
     .then(data => {
       let nowSelected = {};
       let selected = data.filter(genre => genre.name === selectedGenre);
       selected = selected[0]
-      console.log(selected)
       nowSelected["name"] = selected.name;
       nowSelected["url"] = selected.url;
-      let nowPlaying = nowSelected
-      this.setState({nowSelected,nowPlaying, queriedPlaylists: selected.relatedPlaylists})
+      let nowPlaying = nowSelected;
+      let queriedPlaylists = selected.relatedPlaylists;
+      this.setState({nowSelected, nowPlaying, queriedPlaylists})
     })
   }
 
