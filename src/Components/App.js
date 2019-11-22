@@ -15,6 +15,7 @@ class App extends Component {
       nowSelected: {},
       nowPlaying: {},
       queriedPlaylists: [],
+      savedPlaylists: [],
       saved: false,
       index: 0,
       play: false
@@ -29,12 +30,30 @@ class App extends Component {
     Auth.login(code)
       .then(res=>{
         const currentUser = res
-        this.setDefaultSelectedPlaylist();
+        this.setNowSelected("pop");
+        this.findSavedPlaylists(currentUser.id);
         this.setState({currentUser},this.props.history.push("/"))
       })
   }
 
+  findSavedPlaylists = id => {
+    fetch("http://localhost:3000/user_playlists")
+    .then(res => res.json())
+    .then(data => {
+      let savedPlaylistIds = []
+      let savedPlaylists = []
+      data.forEach(item => {
+        if(item.user_id === this.state.currentUser.id){
+          savedPlaylists.push(item.name)
+          savedPlaylists.push(item.url)
+        }
+      })
+      this.setState({savedPlaylists})
+    })
+  }
+
   setDefaultSelectedPlaylist = () => {
+    console.log("SET DEFAULT SELECTED PLAYLIST")
     fetch('http://localhost:3000/playlists/1699')
     .then(res => res.json())
     .then(data => {
@@ -49,35 +68,38 @@ class App extends Component {
     })
   }
 
-  // renderRelatedPlaylists = () => {
-  //   console.log("ANONYMOUS")
-  //   for(let i = 0; i < this.state.queriedPlaylists.length; i++){
-  //     <p>{this.state.queriedPlaylists[i]}</p>
-  //   }
-  // }
-
-  // componentDidMount(){
-  //   this.props.changePreviewUrl()
-  // }
-
   handleCallback = ({location}) =>{
     return <Callback location={location} handleCode={this.handleCode} />
   }
 
   renderRelatedPlaylists = genre => {
     if(this.state.queriedPlaylists.indexOf(genre) % 2 === 0){
-      return <p key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</p>
+      return <a key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</a>
+    }
+  }
+
+  renderSavedPlaylists= genre => {
+    if(this.state.savedPlaylists.indexOf(genre) % 2 === 0){
+      return <a key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</a>
     }
   }
 
   handleiFrameLoaded = event => {
     console.log(event.target)
-    window.focus();
-    window.addEventListener('click', function(e){
-    if(document.activeElement == document.querySelector('iframe'))
-    {
-        alert(1);
+    var myConfObj = {
+      iframeMouseOver : false
     }
+    window.addEventListener('blur',function(){
+      if(myConfObj.iframeMouseOver){
+        console.log('Wow! Iframe Click!');
+      }
+    });
+    
+    document.querySelector('iframe').addEventListener('mouseover',function(){
+       myConfObj.iframeMouseOver = true;
+    });
+    document.querySelector('iframe').addEventListener('mouseout',function(){
+        myConfObj.iframeMouseOver = false;
     });
   }
 
@@ -114,16 +136,62 @@ class App extends Component {
   }
 
   handleSave = () => {
-    console.log(!this.state.saved)
     this.setState({saved: !this.state.saved})
+    fetch('http://localhost:3000/playlists')
+    .then(res => res.json())
+    .then(data => {
+      let playing = data.filter(genre => genre.name === this.state.nowPlaying.name)
+      playing = playing[0]
+      fetch(`http://localhost:3000/user_playlists/`,{
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user: this.state.currentUser.id,
+          playlist: playing.id,
+          name: playing.name,
+          url: playing.url
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        let savedPlaylists = this.state.savedPlaylists
+        savedPlaylists.push(data.name)
+        savedPlaylists.push(data.url)
+        this.setState({savedPlaylists})
+      })
+      .catch(error => console.error(error))
+    })
   }
 
   handleUnsave = () => {
-    console.log(!this.state.saved)
     this.setState({saved: !this.state.saved})
+    fetch("http://localhost:3000/user_playlists/")
+    .then(res => res.json())
+    .then(data => {
+      console.log(data)
+      data.forEach(userplaylist => {
+        console.log(userplaylist)
+        if(userplaylist.user_id === this.state.currentUser.id && userplaylist.name == this.state.nowPlaying.name){
+          console.log("FOUND")
+          fetch(`http://localhost:3000/user_playlists/${userplaylist.id}`,{
+            method: "DELETE"
+            // headers: {
+            //   "Content-Type": 'application/json'
+            // },
+            // body: JSON.stringify({id: userplaylist.id})
+        })
+          .catch(error => console.error(error))
+          // let savedPlaylists = this.state.savedPlaylists
+          // saved
+        }
+      })
+    })
   }
 
   setNowPlaying = selectedGenre => {
+    console.log("SET NOW PLAYING")
     selectedGenre = selectedGenre.replace('r&amp;b','r&b')
     fetch('http://localhost:3000/playlists')
     .then(res => res.json())
@@ -139,10 +207,16 @@ class App extends Component {
       btns.forEach(btn => {
         btn.removeAttribute('disabled')
       })
+      if(this.state.savedPlaylists.includes(nowPlaying.name)){
+        this.setState({saved: true})
+      } else {
+        this.setState({saved: false})
+      }
     })
   }
 
   setNowSelected = selectedGenre => {
+    console.log("SET NOW SELECTED")
     let btns = document.querySelectorAll('button');
     btns.forEach(btn => {
       btn.disabled = 'true'
@@ -165,6 +239,11 @@ class App extends Component {
       btns.forEach(btn => {
         btn.removeAttribute('disabled')
       })
+      if(this.state.savedPlaylists.includes(nowSelected.name)){
+        this.setState({saved: true})
+      } else {
+        this.setState({saved: false})
+      }
     })
   }
 
@@ -177,45 +256,54 @@ class App extends Component {
     console.log(this.state)
     return (
       <div className="App">
-        <Navbar currentUser={this.state.currentUser}/>
+        {this.state.currentUser.display_name ? 
+        <Navbar 
+        currentUser={this.state.currentUser} 
+        queriedPlaylists={this.state.queriedPlaylists} 
+        renderRelatedPlaylists={this.renderRelatedPlaylists}
+        savedPlaylists={this.state.savedPlaylists}
+        renderSavedPlaylists={this.renderSavedPlaylists}
+        />
+        :
+        null
+        }
         <h1>SPOTIFY API</h1>
         <br/>
         {this.state.currentUser.display_name ? 
         <div>
           {this.state.nowPlaying.name ? <h3>Now Playing: {this.state.nowPlaying.name}</h3> : null}
-          {this.state.nowSelected.name ? <h6>Now Selected: {this.state.nowSelected.name}</h6> : null}
           {/* <Profile currentUser = {this.state.currentUser} preview_url={this.state.preview_url} handleClick={this.handleClick}/> */}
           <br/>
-          {this.state.nowPlaying.name ?
-          <iframe onLoad={this.handleiFrameLoaded} src={'https://open.spotify.com/embed/' + this.state.nowPlaying.url.replace("spotify:","").replace(":","/")} width="300" height="80" frameBorder="0" allowtransparency="true" allow="encrypted-media"></iframe>
-          : 
-          null}
-          {this.state.play ? 
+          {/* {this.state.play ?  */}
             <div>
             <div className="row justify-content-center">
                 <div className="btn-group col-12 col-md-4" role="group" aria-label="Basic example">
                 <button onClick={this.handleChannelDown} type="button" className="btn btn-secondary">▼</button>
                 {this.state.saved ? 
-                <button onClick={this.handleSave} type="button" className="btn btn-secondary">❤️</button>
+                <button onClick={this.handleUnsave} type="button" className="btn btn-secondary">❤️</button>
                 :
-                <button onClick={this.handleUnsave} type="button" className="btn btn-secondary">🖤</button>
+                <button onClick={this.handleSave} type="button" className="btn btn-secondary">🖤</button>
                 }
                 <button onClick={this.handleChannelUp} type="button" className="btn btn-secondary">▲</button>
                 </div>
             </div>
-        </div>
+          {this.state.nowPlaying.name ?
+          <iframe onLoad={this.handleiFrameLoaded} src={'https://open.spotify.com/embed/' + this.state.nowPlaying.url.replace("spotify:","").replace(":","/")} width="300" height="80" frameBorder="0" allowtransparency="true" allow="encrypted-media"></iframe>
           : 
+          null}
+        </div>
+          {/* : 
           <div className="row justify-content-center">
             <div className="btn-group col-12 col-md-2" role="group" aria-label="Basic example">
               <button onClick={this.play} type="button" className="btn btn-secondary">►</button>
             </div>
           </div>
-          }
-          {this.state.queriedPlaylists && this.state.queriedPlaylists != [] ?
+          } */}
+          {/* {this.state.queriedPlaylists && this.state.queriedPlaylists != [] ?
             this.state.queriedPlaylists.slice(2,this.state.queriedPlaylists.length - 1).map(item => this.renderRelatedPlaylists(item))
           :
           null
-          }
+          } */}
         </div>
         : 
         <div>
