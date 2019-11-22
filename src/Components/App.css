@@ -90,3 +90,17 @@
 .dropdown:hover .dropbtn {
   background-color: #3e8e41;
 }
+
+.login-a {
+  background-color: #1db954;
+  color: white;
+  padding: 10px 48px 10px;
+  border-radius: 500px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+a:hover {
+  color: white;
+  text-decoration: none;
+}
