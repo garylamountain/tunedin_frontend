@@ -175,16 +175,11 @@ class App extends Component {
         console.log(userplaylist)
         if(userplaylist.user_id === this.state.currentUser.id && userplaylist.name == this.state.nowPlaying.name){
           console.log("FOUND")
-          fetch(`http://localhost:3000/user_playlists/${userplaylist.id}`,{
-            method: "DELETE"
-            // headers: {
-            //   "Content-Type": 'application/json'
-            // },
-            // body: JSON.stringify({id: userplaylist.id})
-        })
+          fetch(`http://localhost:3000/user_playlists/${userplaylist.id}`,{method: "DELETE"})
           .catch(error => console.error(error))
-          // let savedPlaylists = this.state.savedPlaylists
-          // saved
+          let savedPlaylists = this.state.savedPlaylists
+          savedPlaylists.splice(this.state.savedPlaylists.indexOf(userplaylist.name), 2)
+          this.setState({savedPlaylists})
         }
       })
     })
