@@ -11,14 +11,15 @@ class App extends Component {
   constructor(props){
     super(props)
     this.state = {
-      currentUser: JSON.parse(localStorage.getItem('currentUser')) || {},
+      currentUser: {},
       nowSelected: JSON.parse(localStorage.getItem('nowSelected')) || {},
       nowPlaying: {},
       queriedPlaylists: [],
       savedPlaylists: [],
       saved: false,
       index: 0,
-      play: false
+      play: false,
+      searchArray: []
     }
   }
 
@@ -58,10 +59,34 @@ class App extends Component {
     }
   }
 
-  renderSavedPlaylists= genre => {
+  renderSearch = genre => {
+    if(this.state.searchArray.indexOf(genre) % 2 === 0){
+      return <li className="navbar-result"><a key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</a></li>
+    }
+  }
+
+  renderSavedPlaylists = genre => {
     if(this.state.savedPlaylists.indexOf(genre) % 2 === 0){
       return <a key={genre} onClick={event => this.setNowSelected(event.target.innerHTML)}>{genre}</a>
     }
+  }
+
+  clearSearchArray = () => {
+    this.setState({searchArray: []})
+  }
+
+  searchPlaylists = genre => {
+    fetch("http://localhost:3000/playlists")
+    .then(res => res.json())
+    .then(data => {
+      let matches = data.filter(item => item.name.includes(genre))
+      let searchArray = [];
+      matches.slice(0, 10).forEach(match => {
+        searchArray.push(match.name)
+        searchArray.push(match.url)
+      })
+      this.setState({searchArray})
+    })
   }
 
   handleiFrameLoaded = event => {
@@ -217,6 +242,7 @@ class App extends Component {
 
   setNowSelected = selectedGenre => {
     console.log("SET NOW SELECTED")
+      this.setState({searchArray: []})
       let btns = document.querySelectorAll('button');
       btns.forEach(btn => {
         btn.disabled = 'true'
@@ -264,6 +290,10 @@ class App extends Component {
           renderRelatedPlaylists={this.renderRelatedPlaylists}
           savedPlaylists={this.state.savedPlaylists}
           renderSavedPlaylists={this.renderSavedPlaylists}
+          searchPlaylists={this.searchPlaylists}
+          searchArray={this.state.searchArray}
+          renderSearch={this.renderSearch}
+          clearSearchArray={this.clearSearchArray}
           />
           :
           null}

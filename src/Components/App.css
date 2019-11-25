@@ -104,3 +104,19 @@ a:hover {
   color: white;
   text-decoration: none;
 }
+
+.navbar-search {
+  position: relative;
+}
+
+.navbar-results {
+  position: fixed;
+  display: inline;
+  z-index:1000;
+}
+
+.navbar-result {
+  background-color: white;
+  list-style-type: none;
+  cursor: pointer;
+}
