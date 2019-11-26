@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Callback from "./Callback"
 import Navbar from "./Navbar"
+import Display from "./Display"
 import Login from "./Login"
 import Auth from "../Adapters/Auth"
 import {Route, withRouter} from "react-router-dom"
@@ -216,7 +217,25 @@ class App extends Component {
   }
 
   setDefault = selectedGenre => {    
-    console.log(selectedGenre)
+    if(selectedGenre == "1"){
+      selectedGenre = "pop"
+    } else if (selectedGenre == "2") {
+      selectedGenre = "rock"
+    } else if (selectedGenre == "3") {
+      selectedGenre = "hip hop"
+    } else if (selectedGenre == "4") {
+      selectedGenre = "punk"
+    } else if (selectedGenre == "5") {
+      selectedGenre = "jazz"
+    } else if (selectedGenre == "6") {
+      selectedGenre = "experimental"
+    } else if (selectedGenre == "7") {
+      selectedGenre = "classical"
+    } else if (selectedGenre == "8") {
+      selectedGenre = "random"
+    } else {
+      selectedGenre = "random"
+    }
     if(selectedGenre != "random"){
       console.log(selectedGenre)
       fetch("http://localhost:3000/playlists")
@@ -302,18 +321,19 @@ class App extends Component {
           <div>
             {this.state.nowPlaying.name ?
             <div>
+              <Display nowPlaying={this.state.nowPlaying}/>
             {this.state.nowPlaying.name ? <h3>Now Playing: {this.state.nowPlaying.name}</h3> : null}
             <br/>
               <div>
               <div className="row justify-content-center">
                   <div className="btn-group col-12 col-md-4" role="group" aria-label="Basic example">
-                  <button onClick={this.handleChannelDown} type="button" className="btn btn-secondary">▼</button>
+                  <button onClick={this.handleChannelDown} type="button" className="btn btn-dark">▼</button>
                   {this.state.saved ? 
-                  <button onClick={this.handleUnsave} type="button" className="btn btn-secondary">❤️</button>
+                  <button onClick={this.handleUnsave} type="button" className="btn btn-dark">❤️</button>
                   :
-                  <button onClick={this.handleSave} type="button" className="btn btn-secondary">🖤</button>
+                  <button onClick={this.handleSave} type="button" className="btn btn-dark">🖤</button>
                   }
-                  <button onClick={this.handleChannelUp} type="button" className="btn btn-secondary">▲</button>
+                  <button onClick={this.handleChannelUp} type="button" className="btn btn-dark">▲</button>
                   </div>
               </div>
               <br />
@@ -325,16 +345,15 @@ class App extends Component {
           </div>
            : 
            <div>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>pop</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>rock</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>metal</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>hip hop</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>punk</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>jazz</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>experimental</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>country</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>classical</p>
-           <p onClick={event => this.setDefault(event.target.innerHTML)}>random</p>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>1</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>2</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>3</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>4</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>5</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>6</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>7</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>8</button>
+           <button className="btn btn-dark" onClick={event => this.setDefault(event.target.innerHTML)}>9</button>
            </div>
            }
           </div>

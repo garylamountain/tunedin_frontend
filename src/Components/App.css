@@ -65,7 +65,8 @@
   background-color: #f9f9f9;
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+  z-index: 1010;
+  position: absolute;
 }
 
 /* Links inside the dropdown */
@@ -126,5 +127,37 @@ a:hover {
 }
 
 .row {
-  width: 105%;
+  width: 98%;
 }
+
+.btn-dark:hover {
+  color: #d6b75c;
+}
+
+.btn-group-btn {
+  color: #1db954;
+}
+
+.display {
+  text-align: center; 
+  font-family: 'digital-clock-font';
+  font-size: 108px;
+  color: #7fffd4;
+  display: inline;
+}
+
+@font-face{
+  font-family:'digital-clock-font';
+  src: url('../digital-7.ttf');
+ }
+
+ .overlay {
+  position: absolute;
+  z-index:1020;
+ }
+
+ .underlay {
+   color: #7fffd447;
+   z-index: 1100;
+   background-color: black;
+ }
