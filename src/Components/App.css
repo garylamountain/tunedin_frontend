@@ -134,6 +134,10 @@ a:hover {
   color: #d6b75c;
 }
 
+.btn-dark {
+  color: #2cbd38;
+}
+
 .btn-group-btn {
   color: #1db954;
 }
